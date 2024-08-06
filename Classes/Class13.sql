@@ -57,7 +57,7 @@ SET SQL_SAFE_UPDATES = 1;
 
 -- 4
 
-SELECT rental_id, inventory_id
+SELECT rental_id, inventory_id, rental_date
 FROM rental
 WHERE return_date IS NULL
 ORDER BY rental_date DESC
@@ -105,29 +105,27 @@ WHERE film_id = 1;
 
 -- 6
 
--- Find an available inventory id
+
 SELECT inventory_id
 FROM inventory
 WHERE film_id IN (SELECT film_id FROM film)
 AND inventory_id NOT IN (SELECT inventory_id FROM rental WHERE return_date IS NULL)
 LIMIT 1;
 
--- Assuming the available inventory_id found is 1, replace it in the following statements
 INSERT INTO rental (rental_date, inventory_id, customer_id, staff_id)
 VALUES (
-    NOW(), -- rental_date
-    10, -- inventory_id
-    (SELECT customer_id FROM customer ORDER BY create_date DESC LIMIT 1), -- Most recently added customer
-    (SELECT staff_id FROM staff ORDER BY last_update DESC LIMIT 1) -- Any staff
+    NOW(),
+    10,
+    (SELECT customer_id FROM customer ORDER BY create_date DESC LIMIT 1),
+    (SELECT staff_id FROM staff ORDER BY last_update DESC LIMIT 1)
 );
 
--- Add a payment entry
 INSERT INTO payment (customer_id, staff_id, rental_id, amount, payment_date)
 VALUES (
-    (SELECT customer_id FROM customer ORDER BY create_date DESC LIMIT 1), -- Most recently added customer
-    (SELECT staff_id FROM staff ORDER BY last_update DESC LIMIT 1), -- Any staff
-    (SELECT rental_id FROM rental ORDER BY rental_date DESC LIMIT 1), -- Most recently added rental
-    (SELECT rental_rate FROM film WHERE film_id = (SELECT film_id FROM inventory WHERE inventory_id = 10)), -- Film rental rate
-    NOW() -- payment_date
+    (SELECT customer_id FROM customer ORDER BY create_date DESC LIMIT 1),
+    (SELECT staff_id FROM staff ORDER BY last_update DESC LIMIT 1),
+    (SELECT rental_id FROM rental ORDER BY rental_date DESC LIMIT 1),
+    (SELECT rental_rate FROM film WHERE film_id = (SELECT film_id FROM inventory WHERE inventory_id = 10)),
+    NOW()
 );
 
